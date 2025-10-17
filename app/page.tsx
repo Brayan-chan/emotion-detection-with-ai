@@ -1,18 +1,22 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import * as faceapi from "@vladmandic/face-api"
 import EmotionDetector from "@/components/emotion-detector"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+import ReactiveParticles from "@/components/reactive-particles"
 
 export default function Home() {
   const [modelsLoaded, setModelsLoaded] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [dominantEmotion, setDominantEmotion] = useState<string | null>(null)
+  const [cameraActive, setCameraActive] = useState(false)
 
   useEffect(() => {
     const loadModels = async () => {
       try {
+        // Carga dinámica de face-api solo en el cliente
+        const faceapi = await import("@vladmandic/face-api")
         const MODEL_URL = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/"
         await faceapi.nets.tinyFaceDetector.load(MODEL_URL)
         await faceapi.nets.faceLandmark68Net.load(MODEL_URL)
@@ -40,11 +44,12 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex flex-col relative">
+      <ReactiveParticles emotion={dominantEmotion} isActive={cameraActive} />
       <Header />
-      <main className="flex-1 flex items-center justify-center px-4 py-8">
+      <main className="flex-1 flex items-center justify-center px-4 py-8 relative z-10">
         {modelsLoaded ? (
-          <EmotionDetector />
+          <EmotionDetector onEmotionChange={setDominantEmotion} onCameraChange={setCameraActive} />
         ) : (
           <div className="text-white text-center">
             <p>Error al cargar los modelos. Por favor, recarga la página.</p>
